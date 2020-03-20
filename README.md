@@ -6,8 +6,8 @@ Transforms all PAGE-XML+IMG to PDF with text
 
 ### Requirements
 
-> OCR-D Workflow
-> JAVA Runtime
+- OCR-D Workflow
+- JAVA Runtime
 
 ### Start the process
 
