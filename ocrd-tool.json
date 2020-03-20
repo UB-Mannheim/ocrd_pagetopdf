@@ -1,0 +1,63 @@
+{
+  "version": "0.0.1",
+  "git_url": "https://github.com/jkamlah/ocrd_pagetopdf",
+  "tools": {
+    "ocrd-pagetopdf": {
+      "executable": "ocrd-pagetopdf",
+      "description": "Convert between to PDF format",
+      "categories": [
+        "Can't be arsed ..."
+      ],
+      "steps": [
+        "... to look up now"
+      ],
+      "input_file_grp": [
+        "OCR-D-OCR-PAGE"
+      ],
+      "output_file_grp": [
+        "OCR-D-OCR-PDF"
+      ],
+      "parameters": {
+        "font": {
+          "description": "Used font in pdf file",
+          "type": "string",
+          "default": ""
+        },
+       "outlines": {
+          "description": "Draw outlines for: R(egion), T(extline), W(ord), G(lyph)",
+          "type": "string",
+          "default": "",
+          "enum": [
+              "",
+			  "R",
+			  "T",
+              "W",
+			  "G"
+          ]
+        },
+		   "text-source": {
+          "description": "Level of Text output: R(egion), T(extline), W(ord), G(lyph)",
+          "type": "string",
+          "default": "W",
+          "enum": [
+              "",
+			  "R",
+			  "T",
+              "W",
+			  "G"
+          ]
+        },
+        "ext": {
+          "description": "Output extension",
+          "type": "string",
+          "default": ".pdf"
+        },
+		    "script-args": {
+          "description": "Arguments to PageToPdf",
+          "type": "string",
+          "default": ""
+        }
+      }
+    }
+  }
+}

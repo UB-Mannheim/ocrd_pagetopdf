@@ -1,0 +1,30 @@
+PAGE to PDF Converter
+
+PRImA Research Lab, University of Salford, UK
+
+Arguments:
+
+  -xml <XML file|folder>     Single PAGE XML file to convert or
+                             a folder with multiple XML files.
+
+  -image <image file|folder> Single document image (.tif, .png, .jpg) or
+                             a folder with multiple images (the filenames
+                             have to match the filenames of the XMLs).
+
+  -pdf <PDF file>         Output PDF file.
+
+  -text-source <R|L|W|G>  Optional. Add hidden text layer, using text from:
+                            Text region objects  R
+                            Text line objects    T
+                            Word objects         W
+                            Glyph objects        G
+
+  -outlines <R|L|W|G>     Optional. Add layer with object outlines.
+                          One or a combination of (no spaces)):
+                              Regions     R
+                              Text lines  T
+                              Words       W
+                              Glyphs      G
+
+  -font <TTF file>        Optional. TrueType font to be used.
+                          See included font 'data/AletheiaSans.ttf' 

@@ -1,0 +1,16 @@
+PAGE to PDF Converter 1.1
+Copyright 2014-2019 PRImA Research Lab, University of Salford, UK
+
+This software in its entirety must not be copied, distributed or
+used without permission from PRImA.
+
+Under no circumstances will PRImA be liable in any way for any
+content or for any loss or damage of any kind incurred as a result
+of the use of this software.
+
+
+For copyright of used iText PDF library see:
+https://github.com/itext/itextpdf
+
+For copyright of the used font DejaVu Sans see:
+http://dejavu-fonts.org/.
