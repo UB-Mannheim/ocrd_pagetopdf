@@ -47,6 +47,11 @@
 			  "G"
           ]
         },
+        "repair": {
+            "description": "Repair page to produce ",
+            "type": "boolean",
+            "default": false
+        },
         "ext": {
           "description": "Output extension",
           "type": "string",

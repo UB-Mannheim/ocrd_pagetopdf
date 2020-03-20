@@ -41,6 +41,7 @@ main () {
     text_source=(${params['text-source']:-""})
     font=(${params['font']:-""})
     outlines=(${params['outlines']:-""})
+    repair=(${params['repair']})
 
     # Parameters
     if [ ${#font} -gt "0" ]; then
@@ -84,8 +85,14 @@ main () {
            error "input file \"$in_file\" ID=${in_id} (pageId=${pageid}) is not on disk"
            continue
         fi
+        
+        # Rework coords in PAGE
+        if [ $repair = True ]; then
+            python3 "$SHAREDIR/ptp/repair_pagecoords.py" "$in_file" "$in_file.rework"
+		    in_file="$in_file.rework"
+        fi
 		
-		img_file=($(ocrd workspace find \
+        img_file=($(ocrd workspace find \
         -g $pageid \
         -G $img_file_grp \
         -k local_filename \
@@ -105,6 +112,10 @@ main () {
 
 	
         java -jar "$SHAREDIR/ptp/PageToPdf.jar" $font $text_source $outlines -xml "$in_file" -image "$img_file" -pdf "$out_file"
+
+        if [ $repair = True ]; then
+            rm $in_file
+        fi
 
     done
 }
