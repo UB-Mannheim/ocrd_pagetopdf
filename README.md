@@ -15,4 +15,6 @@ Transforms all PAGE-XML+IMG to PDF with text
 
 Run the script and create an PDF with text based on wordlevel
 
+If "java.lang.NullPointerException" appears, try (a little workaround):
 
+    $ ocrd-pagetopdf -I PAGE-XML-FOLDER,IMG-FOLDER -O PDF-FOLDER -p '{"text-source":"W","repair":true}'
