@@ -38,7 +38,7 @@
 		   "text-source": {
           "description": "Level of Text output: R(egion), T(extline), W(ord), G(lyph)",
           "type": "string",
-          "default": "W",
+          "default": "",
           "enum": [
               "",
 			  "R",
