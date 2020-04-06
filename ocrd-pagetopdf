@@ -41,7 +41,7 @@ main () {
     text_source=(${params['text-source']:-""})
     font=(${params['font']:-""})
     outlines=(${params['outlines']:-""})
-    neg2zero=(${params['negative2zero']})
+    negative2zero=(${params['negative2zero']})
 
     # Parameters
     if [ ${#font} -gt "0" ]; then
@@ -87,7 +87,7 @@ main () {
         fi
         
         # Rework coords in PAGE
-        if [ $neg2zero = True ]; then
+        if [ $negative2zero = True ]; then
             python3 "$SHAREDIR/ptp/negative2zero.py" "$in_file" "$in_file.rework"
 		    in_file="$in_file.rework"
         fi
@@ -113,7 +113,7 @@ main () {
 	
         java -jar "$SHAREDIR/ptp/PageToPdf.jar" $font $text_source $outlines -xml "$in_file" -image "$img_file" -pdf "$out_file"
 
-        if [ $repair = True ]; then
+        if [ $negative2zero = True ]; then
             rm $in_file
         fi
 

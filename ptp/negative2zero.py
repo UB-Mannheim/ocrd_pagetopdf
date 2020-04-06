@@ -34,4 +34,4 @@ def negative2zero(inputfile, outputfile):
     with open(outputfile,"w") as fout:
         fout.write(content)
 if __name__=="__main__":
-	repaircoords(sys.argv[1],sys.argv[2])
+	negative2zero(sys.argv[1],sys.argv[2])
