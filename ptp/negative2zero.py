@@ -17,8 +17,8 @@ def update_points(points):
             points[idx] = point
     return " ".join(points)
 
-def repaircoords(inputfile, outputfile):
-    print("Repairing coords..")
+def negative2zero(inputfile, outputfile):
+    print("Setting negative coords to zero..")
     pcgts = parse(inputfile, silence=True)
     page = pcgts.get_Page()
     for attr in dir(page):

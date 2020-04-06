@@ -41,7 +41,7 @@ main () {
     text_source=(${params['text-source']:-""})
     font=(${params['font']:-""})
     outlines=(${params['outlines']:-""})
-    repair=(${params['repair']})
+    neg2zero=(${params['negative2zero']})
 
     # Parameters
     if [ ${#font} -gt "0" ]; then
@@ -87,8 +87,8 @@ main () {
         fi
         
         # Rework coords in PAGE
-        if [ $repair = True ]; then
-            python3 "$SHAREDIR/ptp/repair_pagecoords.py" "$in_file" "$in_file.rework"
+        if [ $neg2zero = True ]; then
+            python3 "$SHAREDIR/ptp/negative2zero.py" "$in_file" "$in_file.rework"
 		    in_file="$in_file.rework"
         fi
 		

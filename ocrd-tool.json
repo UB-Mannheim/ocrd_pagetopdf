@@ -47,8 +47,8 @@
 			  "G"
           ]
         },
-        "repair": {
-            "description": "Repair page to produce ",
+        "negative2zero": {
+            "description": "Set all negative box values to 0",
             "type": "boolean",
             "default": false
         },
