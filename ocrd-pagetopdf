@@ -1,7 +1,8 @@
 #!/bin/bash
 set -eu
 set -o pipefail
-set -x
+# showing cmd execution on std (deactivated for productive use)
+# set -x
 
 which ocrd >/dev/null 2>/dev/null || { echo "ocrd not in \$PATH. Panicking"; exit 1; }
 
