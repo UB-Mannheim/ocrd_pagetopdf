@@ -32,6 +32,10 @@ main () {
     cd "${ocrd__argv[working_dir]}"
     IFS=',' read -ra in_grps <<< "${ocrd__argv[input_file_grp]}"
     echo $in_grps
+    if [ ${#in_grps[@]} -ne "2" ]; then
+        echo "If you want to generate a PDF, please provide two input-file-grps: -I PAGE-XML,IMG"
+        exit 1
+     fi 
     in_file_grp="${in_grps[0]}"
 	img_file_grp="${in_grps[1]}"
     out_file_grp=${ocrd__argv[output_file_grp]}
