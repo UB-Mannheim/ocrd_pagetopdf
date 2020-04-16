@@ -50,11 +50,12 @@ main () {
 
     # Parameters
     if [ ${#font} -gt "0" ]; then
-        echo "VAR is not empty"
         font="-font $font"
     fi
     if [ ${#text_source} -gt "0" ]; then 
         text_source="-text-source $text_source"
+    else
+        echo "If you want to add textinformation, please set the \"text-source\" to a specific level e.g. {\"text-source\":\"T\"}."
     fi
     if [ ${#outlines} -gt "0" ]; then 
         outlines="-outlines $outlines"
