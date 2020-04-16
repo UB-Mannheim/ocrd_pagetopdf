@@ -24,25 +24,25 @@
           "default": ""
         },
        "outlines": {
-          "description": "Draw outlines for: R(egion), T(extline), W(ord), G(lyph)",
+          "description": "Draw outlines for: R(egion), Text(L)ine, W(ord), G(lyph)",
           "type": "string",
           "default": "",
           "enum": [
               "",
 			  "R",
-			  "T",
+			  "L",
               "W",
 			  "G"
           ]
         },
 		   "text-source": {
-          "description": "Level of Text output: R(egion), T(extline), W(ord), G(lyph)",
+          "description": "Level of Text output: R(egion), Text(L)ine, W(ord), G(lyph)",
           "type": "string",
           "default": "",
           "enum": [
               "",
 			  "R",
-			  "T",
+			  "L",
               "W",
 			  "G"
           ]
