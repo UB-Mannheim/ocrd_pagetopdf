@@ -30,30 +30,30 @@ main () {
     ocrd__wrap "$SHAREDIR/ocrd-tool.json" "$SCRIPT_NAME" "$@"
 
     cd "${ocrd__argv[working_dir]}"
+    local page_id in_file_grp img_file_grp out_file_grp
+    page_id=${ocrd__argv[page_id]:-}
     IFS=',' read -ra in_grps <<< "${ocrd__argv[input_file_grp]}"
-    echo $in_grps
-    if [ ${#in_grps[@]} -ne "2" ]; then
-        echo "If you want to generate a PDF, please provide two input-file-grps: -I PAGE-XML,IMG"
-        exit 1
-     fi 
     in_file_grp="${in_grps[0]}"
-	img_file_grp="${in_grps[1]}"
+    img_file_grp="${in_grps[1]:-}"
+    if [ -z "$img_file_grp" ]; then
+        warning "Without a second input file group for images, the original imageFilename will be used"
+    fi
     out_file_grp=${ocrd__argv[output_file_grp]}
     mkdir -p $out_file_grp
 
     # Parameters
     local negative2zero output_extension
-    options=()
+    declare -a parameters=()
     if [ -z ${params['textequiv_level']:=} ]; then
         warning "If you want to add a text layer, please set parameter 'textequiv_level' accordingly!"
     else
         # first letter is sufficient (case does not matter)
-        options+=(-text-source ${params['textequiv_level']:0:1})
+        parameters+=(-text-source ${params['textequiv_level']:0:1})
     fi
-    options+=(${params['font']:+-font} ${params['font']:-})
+    parameters+=(${params['font']:+-font} ${params['font']:-})
     if [ -n ${params['outlines']:=} ]; then
         # first letter is sufficient (case does not matter)
-        options+=(-outlines ${params['outlines']:0:1})
+        parameters+=(-outlines ${params['outlines']:0:1})
     fi
     case ${params['negative2zero']} in
         [tT]rue|1)
@@ -62,7 +62,7 @@ main () {
         *)
             negative2zero=0
     esac
-    options+=(${params['script-args']})
+    parameters+=(${params['script-args']})
     output_extension=${params['ext']}
 
     # Download the files and do the conversion
@@ -86,11 +86,15 @@ main () {
         local in_file="${fields[0]}"
         local in_id="${fields[1]}"
         local pageid="${fields[2]:-}"
+        declare -a options=(${parameters[*]})
 		
+        info "processing page '$pageid'"
+        
         if ! test -f "$in_file"; then
            error "input file \"$in_file\" ID=${in_id} (pageId=${pageid}) is not on disk"
            continue
         fi
+        info "found PAGE file '$in_file'"
         
         # Rework coords in PAGE
         if ((negative2zero)); then
@@ -101,12 +105,18 @@ main () {
         fi
 	options+=(-xml "$in_file")
 
-        img_file=$(ocrd workspace find \
-                        -g $pageid -G $img_file_grp \
-                        -k local_filename --download)
+        if [ -n "$img_file_grp" ]; then
+            img_file=$(ocrd workspace find \
+                            -g $pageid -G $img_file_grp \
+                            -k local_filename --download)
+        else
+            # we could use xsltproc or xmlstarlet for this
+            # (but that would add another dependency)
+            img_file=$(python3 "$SHAREDIR/ptp/extract-imagefilename.py" "$in_file")
+        fi
 
         if ! test -f "$img_file"; then
-           error "no image file in  \"$img_file_grp\""
+           error "No image file '$img_file' for $in_id (pageId=$pageid)"
            continue
         fi
         options+=(-image "$img_file")
@@ -116,14 +126,31 @@ main () {
         if [ "x$out_id" = "x$in_id" ]; then
             out_id=${out_file_grp}_${zeros:0:$((4-${#n}))}$n
         fi
-        options+=(-pdf "$out_file_grp/${out_id}$output_extension")
+        local out_file="$out_file_grp/${out_id}$output_extension"
+        options+=(-pdf "$out_file")
 
-        java -jar "$SHAREDIR/ptp/PageToPdf.jar" "${options[@]}"
-
+        info "found image file '$img_file'"
+        if ! output=$(java -jar "$SHAREDIR/ptp/PageToPdf.jar" "${options[@]}" 2>&1); then
+            error "PdfToPdf failed for ID $in_id (pageId=$pageid): $output"
+            continue
+        fi
+        
         if ((negative2zero)); then
             rm $tmpfile
         fi
 
+        # Add the output file to METS
+        if [ -n "$pageid" ]; then
+            options=( -g $pageid )
+        else
+            options=()
+        fi
+        options+=( -G $out_file_grp
+                   -m application/pdf
+                   -i "$out_id"
+                   "$out_file" )
+        info "adding output PDF file '$out_file'"
+        ocrd workspace add "${options[@]}"
     done
 }
 
