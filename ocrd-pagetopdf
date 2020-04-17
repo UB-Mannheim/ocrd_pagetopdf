@@ -41,29 +41,29 @@ main () {
     out_file_grp=${ocrd__argv[output_file_grp]}
     mkdir -p $out_file_grp
 
-    # read params
-    local from_to script_args output_extension
-    text_source=(${params['text-source']:-""})
-    font=(${params['font']:-""})
-    outlines=(${params['outlines']:-""})
-    negative2zero=(${params['negative2zero']})
-
     # Parameters
-    if [ ${#font} -gt "0" ]; then
-        font="-font $font"
-    fi
-    if [ ${#text_source} -gt "0" ]; then 
-        text_source="-text-source $text_source"
+    local negative2zero output_extension
+    options=()
+    if [ -z ${params['textequiv_level']:=} ]; then
+        warning "If you want to add a text layer, please set parameter 'textequiv_level' accordingly!"
     else
-        echo "If you want to add textinformation, please set the \"text-source\" to a specific level e.g. {\"text-source\":\"T\"}."
+        # first letter is sufficient (case does not matter)
+        options+=(-text-source ${params['textequiv_level']:0:1})
     fi
-    if [ ${#outlines} -gt "0" ]; then 
-        outlines="-outlines $outlines"
+    options+=(${params['font']:+-font} ${params['font']:-})
+    if [ -n ${params['outlines']:=} ]; then
+        # first letter is sufficient (case does not matter)
+        options+=(-outlines ${params['outlines']:0:1})
     fi
-
-    script_args=(${params['script-args']})
+    case ${params['negative2zero']} in
+        [tT]rue|1)
+            negative2zero=1
+            ;;
+        *)
+            negative2zero=0
+    esac
+    options+=(${params['script-args']})
     output_extension=${params['ext']}
-
 
     # Download the files and do the conversion
     local IFS=$'\n'
@@ -87,40 +87,41 @@ main () {
         local in_id="${fields[1]}"
         local pageid="${fields[2]:-}"
 		
-		if ! test -f "$in_file"; then
+        if ! test -f "$in_file"; then
            error "input file \"$in_file\" ID=${in_id} (pageId=${pageid}) is not on disk"
            continue
         fi
         
         # Rework coords in PAGE
-        if [ $negative2zero = True ]; then
-            python3 "$SHAREDIR/ptp/negative2zero.py" "$in_file" "$in_file.rework"
-		    in_file="$in_file.rework"
+        if ((negative2zero)); then
+            local tmpfile
+            tmpfile=$(mktemp --tmpdir ocrd-pagetopdf.XXXXXX)
+            python3 "$SHAREDIR/ptp/negative2zero.py" "$in_file" $tmpfile
+            in_file=$tmpfile
         fi
-		
-        img_file=($(ocrd workspace find \
-        -g $pageid \
-        -G $img_file_grp \
-        -k local_filename \
-        --download))
+	options+=(-xml "$in_file")
+
+        img_file=$(ocrd workspace find \
+                        -g $pageid -G $img_file_grp \
+                        -k local_filename --download)
 
         if ! test -f "$img_file"; then
            error "no image file in  \"$img_file_grp\""
            continue
         fi
+        options+=(-image "$img_file")
 
         # Output filename
         local out_id="${in_id//$in_file_grp/$out_file_grp}"
         if [ "x$out_id" = "x$in_id" ]; then
             out_id=${out_file_grp}_${zeros:0:$((4-${#n}))}$n
         fi
-        local out_file="$out_file_grp/${out_id}$output_extension"
+        options+=(-pdf "$out_file_grp/${out_id}$output_extension")
 
-	
-        java -jar "$SHAREDIR/ptp/PageToPdf.jar" $font $text_source $outlines -xml "$in_file" -image "$img_file" -pdf "$out_file"
+        java -jar "$SHAREDIR/ptp/PageToPdf.jar" "${options[@]}"
 
-        if [ $negative2zero = True ]; then
-            rm $in_file
+        if ((negative2zero)); then
+            rm $tmpfile
         fi
 
     done

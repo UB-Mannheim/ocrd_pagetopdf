@@ -4,12 +4,12 @@
   "tools": {
     "ocrd-pagetopdf": {
       "executable": "ocrd-pagetopdf",
-      "description": "Convert between to PDF format",
+      "description": "Convert text and layout annotations to PDF format (overlaying original image with text layer and polygon outlines)",
       "categories": [
-        "Can't be arsed ..."
+        "Long-term preservation"
       ],
       "steps": [
-        "... to look up now"
+        "postprocessing/format-conversion"
       ],
       "input_file_grp": [
         "OCR-D-OCR-PAGE"
@@ -19,32 +19,34 @@
       ],
       "parameters": {
         "font": {
-          "description": "Used font in pdf file",
+          "description": "Font file to be used in PDF file. If unset, AletheiaSans.ttf is used. (Make sure to pick a font which covers all glyphs!)",
           "type": "string",
+          "format": "uri",
+          "content-type": "application/x-font-ttf",
           "default": ""
         },
        "outlines": {
-          "description": "Draw outlines for: R(egion), Text(L)ine, W(ord), G(lyph)",
+          "description": "What segment hierarchy to draw coordinate outlines for. If unset, no outlines are drawn.",
           "type": "string",
           "default": "",
           "enum": [
-              "",
-			  "R",
-			  "L",
-              "W",
-			  "G"
+            "",
+            "region",
+            "line",
+            "word",
+            "glyph"
           ]
         },
-		   "text-source": {
-          "description": "Level of Text output: R(egion), Text(L)ine, W(ord), G(lyph)",
+        "textequiv_level": {
+          "description": "What segment hierarchy level to render text output from. If unset, no text is rendered.",
           "type": "string",
           "default": "",
           "enum": [
-              "",
-			  "R",
-			  "L",
-              "W",
-			  "G"
+            "",
+            "region",
+            "line",
+            "word",
+            "glyph"
           ]
         },
         "negative2zero": {
@@ -53,12 +55,12 @@
             "default": false
         },
         "ext": {
-          "description": "Output extension",
+          "description": "Output filename extension",
           "type": "string",
           "default": ".pdf"
         },
-		    "script-args": {
-          "description": "Arguments to PageToPdf",
+        "script-args": {
+          "description": "Extra arguments to PageToPdf (see https://github.com/PRImA-Research-Lab/prima-page-to-pdf)",
           "type": "string",
           "default": ""
         }
