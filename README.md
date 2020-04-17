@@ -38,9 +38,9 @@ This will run the script and create PDF files for each page with a text layer ba
 - `java.lang.NullPointerException` 
   If that appears, try (a little workaround) and set negative coordinates to zero:
   
-    ocrd-pagetopdf -I PAGE-FILEGRP -O PDF-FILEGRP -p '{"textequiv_level": "word", "negative2zero": true}'
+      ocrd-pagetopdf -I PAGE-FILGRP -O PDF-FILEGRP -p '{"textequiv_level" : "word", "negative2zero": true}'
 
 - Some letters are illegible?
   Please note that the standard displayed font ([AletheiaSans.ttf](https://github.com/PRImA-Research-Lab/prima-aletheia-web/raw/master/war/aletheiasans-webfont.ttf)) does not support all Unicode glyphs. In case yours are missing, set a (monospace) Unicode font yourself:
 
-    ocrd-pagetopdf -I PAGE-FILEGRP -O PDF-FILEGRP -p '{"textequiv_level": "word", "font": "/usr/share/fonts/truetype/ubuntu/UbuntuMono-R.ttf"}'
+      ocrd-pagetopdf -I PAGE-FILGRP -O PDF-FILEGRP -p '{"textequiv_level" : "word", "font": "/usr/share/fonts/truetype/ubuntu/UbuntuMono-R.ttf"}'
