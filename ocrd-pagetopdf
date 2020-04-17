@@ -2,7 +2,7 @@
 set -eu
 set -o pipefail
 # showing cmd execution on std (deactivated for productive use)
-# set -x
+#set -x
 
 which ocrd >/dev/null 2>/dev/null || { echo "ocrd not in \$PATH. Panicking"; exit 1; }
 
@@ -32,6 +32,7 @@ main () {
     cd "${ocrd__argv[working_dir]}"
     local page_id in_file_grp img_file_grp out_file_grp
     page_id=${ocrd__argv[page_id]:-}
+    mets="${ocrd__argv[mets_file]}"
     IFS=',' read -ra in_grps <<< "${ocrd__argv[input_file_grp]}"
     in_file_grp="${in_grps[0]}"
     img_file_grp="${in_grps[1]:-}"
@@ -51,10 +52,13 @@ main () {
         parameters+=(-text-source ${params['textequiv_level']:0:1})
     fi
     parameters+=(${params['font']:+-font} ${params['font']:-})
-    if [ -n ${params['outlines']:=} ]; then
+    if [ -z ${params['outlines']:=} ]; then
         # first letter is sufficient (case does not matter)
+        warning "If you want to add outlines, please set parameter 'outline' accordingly!"
+    else
         parameters+=(-outlines ${params['outlines']:0:1})
     fi
+
     case ${params['negative2zero']} in
         [tT]rue|1)
             negative2zero=1
@@ -62,6 +66,7 @@ main () {
         *)
             negative2zero=0
     esac
+    
     parameters+=(${params['script-args']})
     output_extension=${params['ext']}
 
@@ -103,7 +108,7 @@ main () {
             python3 "$SHAREDIR/ptp/negative2zero.py" "$in_file" $tmpfile
             in_file=$tmpfile
         fi
-	options+=(-xml "$in_file")
+	    options+=(-xml "$in_file")
 
         if [ -n "$img_file_grp" ]; then
             img_file=$(ocrd workspace find \
@@ -128,7 +133,11 @@ main () {
         fi
         local out_file="$out_file_grp/${out_id}$output_extension"
         options+=(-pdf "$out_file")
-
+        
+        if [ "$(ocrd workspace find -i $out_id)" ]; then
+            ocrd workspace remove "$out_id"
+        fi
+ 
         info "found image file '$img_file'"
         if ! output=$(java -jar "$SHAREDIR/ptp/PageToPdf.jar" "${options[@]}" 2>&1); then
             error "PdfToPdf failed for ID $in_id (pageId=$pageid): $output"
@@ -151,6 +160,11 @@ main () {
                    "$out_file" )
         info "adding output PDF file '$out_file'"
         ocrd workspace add "${options[@]}"
+
+    if [ ${params['multipage']:=} ]; then
+        python3 "$SHAREDIR/ptp/multipagepdf.py" "$mets" "${params['multipage']}"
+    fi
+
     done
 }
 

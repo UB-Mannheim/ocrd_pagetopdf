@@ -59,6 +59,11 @@
           "type": "string",
           "default": ".pdf"
         },
+        "multipage": {
+            "description": "Merge all PDFs into one mulitpage file. Value is pdfname.",
+            "type": "string",
+            "default": ""
+        },
         "script-args": {
           "description": "Extra arguments to PageToPdf (see https://github.com/PRImA-Research-Lab/prima-page-to-pdf)",
           "type": "string",
