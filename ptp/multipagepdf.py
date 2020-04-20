@@ -8,19 +8,32 @@ import subprocess
 from ocrd_models import OcrdMets
 from ocrd_utils.logging import getLogger
 from atomicwrites import atomic_write
+from ocrd_models.constants import NAMESPACES as NS
+
+def get_metadata(mets):
+    title = mets._tree.getroot().find('.//mods:title', NS)
+    subtitle = mets._tree.getroot().find('.//mods:subtitle', NS)
+    title = title.text if title is not None else ""
+    title += "Subtitle: "+subtitle.text if subtitle else ""
+    publisher = mets._tree.getroot().find('.//mods:publisher', NS)
+    author = mets._tree.getroot().find('.//mods:author', NS)
+    return {'Author':author.text if author is not None else "",
+            'Title': title,
+            'Keywords': publisher.text+" (Publisher)" if publisher is not None else ""}
 
 def read_from_mets(metsfile, filegrp, outputfile, pagelabel='pageId'):
     mets = OcrdMets(filename=metsfile)
     inputfiles = []
     pagelabels = []
+    print(mets.unique_identifier)
+    metadata = get_metadata(mets)
     for f in mets.find_files(mimetype='application/pdf', fileGrp=filegrp):
         # ingore mulitpaged pdfs
         if f.pageId:
             inputfiles.append(f.local_filename)
-            if pagelabel != "":
-                pagelabels.append(getattr(f, pagelabel, ""))
+            pagelabels.append(getattr(f, pagelabel,""))
     if inputfiles:
-        if not pdfmerge(inputfiles, outputfile, pagelabels=pagelabels):
+        if not pdfmerge(inputfiles, outputfile, pagelabels=pagelabels, metadata=metadata):
             mets.add_file(filegrp, mimetype='application/pdf', ID=outputfile, url=str(Path(filegrp).joinpath(outputfile+'.pdf')))
             with atomic_write(metsfile, overwrite=True) as f:
                 f.write(mets.to_xml(xmllint=True).decode('utf-8'))

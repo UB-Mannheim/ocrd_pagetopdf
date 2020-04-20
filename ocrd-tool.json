@@ -65,14 +65,23 @@
           "default": ".pdf"
         },
         "multipage": {
-            "description": "Merge all PDFs into one mulitpage file. Value is pdfname.",
+            "description": "Merge all PDFs into one mulitpage file. The value is used as filename for the pdf.",
             "type": "string",
             "default": ""
         },
-        "mp-pagelabel": {
-            "description": "Mulitpage-Parameter: Set the page information, which will be used as pagelabel. Default 'pageId', if the string is empty the page will be numbered consecutively",
+        "pagelabel": {
+            "description": "Multipage-Parameter: Set the page information, which will be used as pagelabel. Default is 'pageId', if the string is empty the pages will be numbered consecutively",
             "type": "string",
-            "default": "pageId"
+            "default": "pageId",
+            "enum": [
+            "",
+            "pageId",
+            "basename",
+            "basename_without_extension",
+            "local_filename",
+            "ID",
+            "url"
+             ]
         },
         "script-args": {
           "description": "Extra arguments to PageToPdf (see https://github.com/PRImA-Research-Lab/prima-page-to-pdf)",
