@@ -54,6 +54,11 @@
             "type": "boolean",
             "default": false
         },
+        "overwrite": {
+            "description": "Remove all pre-existings files in the output file group.",
+            "type": "boolean",
+            "default": false
+        },
         "ext": {
           "description": "Output filename extension",
           "type": "string",
