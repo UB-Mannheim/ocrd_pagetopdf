@@ -40,6 +40,19 @@ main () {
         warning "Without a second input file group for images, the original imageFilename will be used"
     fi
     out_file_grp=${ocrd__argv[output_file_grp]}
+    
+    # Remove pre-existing files
+    if [ -d ${out_file_grp} ]; then
+        case ${params['overwrite']} in
+            [tT]rue|1)
+                warning "Removing all pre-existing files!"
+                ocrd workspace remove-group -rf "$out_file_grp" 
+                ;;
+            *)
+                :
+        esac
+    fi
+
     mkdir -p $out_file_grp
 
     # Parameters
@@ -66,18 +79,6 @@ main () {
     
     parameters+=(${params['script-args']})
     output_extension=${params['ext']}
-
-    # Remove pre-existing files
-    if [ -d ${out_file_grp} ]; then
-        case ${params['overwrite']} in
-            [tT]rue|1)
-                warning "Removing all pre-existing files!"
-                ocrd workspace remove-group -rf "$out_file_grp" 
-                ;;
-            *)
-                :
-        esac
-    fi
 
     # Download the files and do the conversion
     local IFS=$'\n'
