@@ -9,17 +9,18 @@ from ocrd_models import OcrdMets
 from ocrd_utils.logging import getLogger
 from atomicwrites import atomic_write
 
-def read_from_mets(metsfile, filegrp, outputfile):
+def read_from_mets(metsfile, filegrp, outputfile, pagelabel='pageId'):
     mets = OcrdMets(filename=metsfile)
     inputfiles = []
-    page_ids = []
+    pagelabels = []
     for f in mets.find_files(mimetype='application/pdf', fileGrp=filegrp):
         # ingore mulitpaged pdfs
         if f.pageId:
             inputfiles.append(f.local_filename)
-            page_ids.append(f.pageId)
+            if pagelabel != "":
+                pagelabels.append(getattr(f, pagelabel, ""))
     if inputfiles:
-        if not pdfmerge(inputfiles, outputfile, pagelabels=page_ids):
+        if not pdfmerge(inputfiles, outputfile, pagelabels=pagelabels):
             mets.add_file(filegrp, mimetype='application/pdf', ID=outputfile, url=str(Path(filegrp).joinpath(outputfile+'.pdf')))
             with atomic_write(metsfile, overwrite=True) as f:
                 f.write(mets.to_xml(xmllint=True).decode('utf-8'))
@@ -34,13 +35,13 @@ def create_pdfmarks(pdfdir, pagelabels=None, metadata=None):
                 if kwarg in metadata:
                     marks.write(f"/{kwarg} ({metadata[kwarg]})\n")
             marks.write("/DOCINFO pdfmark\n")
-        marks.write("[{Catalog} <<\n\
+        if pagelabels:
+            marks.write("[{Catalog} <<\n\
                     /PageLabels <<\n\
                     /Nums [\n")
-        for idx, pagelabel in enumerate(pagelabels):
-            #marks.write(f"1 << /S /D /St 10>>\n")
-            marks.write(f"{idx} << /P ({pagelabel}) >>\n")
-        else:
+            for idx, pagelabel in enumerate(pagelabels):
+                #marks.write(f"1 << /S /D /St 10>>\n")
+                marks.write(f"{idx} << /P ({pagelabel}) >>\n")
             marks.write("] >> >> /PUT pdfmark")
     return pdfmarks
 
@@ -66,4 +67,4 @@ def pdfmerge(inputfiles, outputfile, pagelabels=None, metadata=None, store_tmp=F
         return 1
 
 if __name__=='__main__':
-    read_from_mets(sys.argv[1], sys.argv[2], sys.argv[3])
+    read_from_mets(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])

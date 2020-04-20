@@ -69,6 +69,11 @@
             "type": "string",
             "default": ""
         },
+        "mp-pagelabel": {
+            "description": "Mulitpage-Parameter: Set the page information, which will be used as pagelabel. Default 'pageId', if the string is empty the page will be numbered consecutively",
+            "type": "string",
+            "default": "pageId"
+        },
         "script-args": {
           "description": "Extra arguments to PageToPdf (see https://github.com/PRImA-Research-Lab/prima-page-to-pdf)",
           "type": "string",
