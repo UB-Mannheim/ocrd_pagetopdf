@@ -168,11 +168,11 @@ main () {
         info "adding output PDF file '$out_file'"
         ocrd workspace add "${options[@]}"
 
-    if [ ${params['multipage']:=} ]; then
-        python3 "$SHAREDIR/ptp/multipagepdf.py" "$mets" "${params['multipage']}"
-    fi
-
     done
+    
+    if [ ${params['multipage']:=} ]; then
+        python3 "$SHAREDIR/ptp/multipagepdf.py" "$mets" "$out_file_grp" "${params['multipage']}"
+    fi
 }
 
 
