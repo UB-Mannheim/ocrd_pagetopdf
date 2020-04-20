@@ -4,25 +4,26 @@ import os.path
 from pathlib import Path
 import sys
 import subprocess
-import traceback
 
 from ocrd_models import OcrdMets
+from ocrd_utils.logging import getLogger
 
-def read_from_mets(metsfile, outputfile):
+def read_from_mets(metsfile, filegrp, outputfile):
     mets = OcrdMets(filename=metsfile)
     inputfiles = []
     page_ids = []
-    for f in mets.find_files(mimetype="application/pdf"):
+    for f in mets.find_files(mimetype="application/pdf", fileGrp=filegrp):
         inputfiles.append(f.local_filename)
-        page_ids.append(f.ID)
+        page_ids.append(f.pageid)
     if inputfiles:
         return pdfmerge(inputfiles, page_ids, outputfile)
     return None
 
 def pdfmerge(inputfiles, page_ids, outputfile, metadata=None):
+    log = getLogger('processor.pagetopdf')
     if isinstance(inputfiles, str):
         inputfiles = inputfiles.split(",")
-    print("Merging PDFs..")
+    log.info("Merging PDFs..")
     try:
         pdfdir = Path(inputfiles[0]).parent
         with open(pdfdir.joinpath("pdfmarks.ps"),"w") as marks:
@@ -44,9 +45,8 @@ def pdfmerge(inputfiles, page_ids, outputfile, metadata=None):
                 -sOutputFile={pdfdir.joinpath(outputfile+'.pdf')} \
                 {' '.join(inputfiles)}\
                 {pdfdir.joinpath('pdfmarks.ps')}", shell=True, stderr=subprocess.STDOUT)
-    except Exception as ex:
-        print(f"Couldn't merge the pdf files. Error: {ex}")
-        traceback.print_exc(file=sys.stdout)
+    except Exception:
+        log.exception(f"Couldn't merge the pdf files.")
 
 if __name__=="__main__":
-    read_from_mets(sys.argv[1], sys.argv[2])
+    read_from_mets(sys.argv[1], sys.argv[2], sys.argv[3])
