@@ -25,13 +25,13 @@ def read_from_mets(metsfile, filegrp, outputfile, pagelabel='pageId'):
     mets = OcrdMets(filename=metsfile)
     inputfiles = []
     pagelabels = []
-    print(mets.unique_identifier)
     metadata = get_metadata(mets)
     for f in mets.find_files(mimetype='application/pdf', fileGrp=filegrp):
         # ingore mulitpaged pdfs
         if f.pageId:
             inputfiles.append(f.local_filename)
-            pagelabels.append(getattr(f, pagelabel,""))
+            if pagelabel != "pagenumber":
+                pagelabels.append(getattr(f, pagelabel,""))
     if inputfiles:
         if not pdfmerge(inputfiles, outputfile, pagelabels=pagelabels, metadata=metadata):
             mets.add_file(filegrp, mimetype='application/pdf', ID=outputfile, url=str(Path(filegrp).joinpath(outputfile+'.pdf')))

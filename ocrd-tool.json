@@ -70,11 +70,11 @@
             "default": ""
         },
         "pagelabel": {
-            "description": "Multipage-Parameter: Set the page information, which will be used as pagelabel. Default is 'pageId', if the string is empty the pages will be numbered consecutively",
+            "description": "Parameter for 'multipage': Set the page information, which will be used as pagelabel. Default is 'pageId', e.g. the option 'pagenumber' will create numbered pagelabel consecutively",
             "type": "string",
             "default": "pageId",
             "enum": [
-            "",
+            "pagenumber",
             "pageId",
             "basename",
             "basename_without_extension",
