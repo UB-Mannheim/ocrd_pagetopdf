@@ -16,7 +16,7 @@ def get_metadata(mets):
     title = title.text if title is not None else ""
     title += "Subtitle: "+subtitle.text if subtitle else ""
     publisher = mets._tree.getroot().find('.//mods:publisher', NS)
-    author = mets._tree.getroot().find('.//mods:author', NS)
+    author = mets._tree.getroot().find('.//mods:creator', NS)
     return {'Author':author.text if author is not None else "",
             'Title': title,
             'Keywords': publisher.text+" (Publisher)" if publisher is not None else ""}
