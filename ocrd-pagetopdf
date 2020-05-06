@@ -40,6 +40,19 @@ main () {
         warning "Without a second input file group for images, the original imageFilename will be used"
     fi
     out_file_grp=${ocrd__argv[output_file_grp]}
+    
+    # Remove pre-existing files
+    if [ -d ${out_file_grp} ]; then
+        case ${params['overwrite']} in
+            [tT]rue|1)
+                warning "Removing all pre-existing files!"
+                ocrd workspace remove-group -rf "$out_file_grp" 
+                ;;
+            *)
+                :
+        esac
+    fi
+
     mkdir -p $out_file_grp
 
     # Parameters
@@ -52,10 +65,7 @@ main () {
         parameters+=(-text-source ${params['textequiv_level']:0:1})
     fi
     parameters+=(${params['font']:+-font} ${params['font']:-})
-    if [ -z ${params['outlines']:=} ]; then
-        # first letter is sufficient (case does not matter)
-        warning "If you want to add outlines, please set parameter 'outline' accordingly!"
-    else
+    if [ ${params['outlines']:=} ]; then
         parameters+=(-outlines ${params['outlines']:0:1})
     fi
 
@@ -134,9 +144,6 @@ main () {
         local out_file="$out_file_grp/${out_id}$output_extension"
         options+=(-pdf "$out_file")
         
-        if [ "$(ocrd workspace find -i $out_id)" ]; then
-            ocrd workspace remove "$out_id"
-        fi
  
         info "found image file '$img_file'"
         if ! output=$(java -jar "$SHAREDIR/ptp/PageToPdf.jar" "${options[@]}" 2>&1); then
@@ -161,11 +168,11 @@ main () {
         info "adding output PDF file '$out_file'"
         ocrd workspace add "${options[@]}"
 
-    if [ ${params['multipage']:=} ]; then
-        python3 "$SHAREDIR/ptp/multipagepdf.py" "$mets" "${params['multipage']}"
-    fi
-
     done
+    
+    if [ ${params['multipage']:=} ]; then
+        python3 "$SHAREDIR/ptp/multipagepdf.py" "$mets" "$out_file_grp" "${params['multipage']}" "${params['pagelabel']}" 
+    fi
 }
 
 

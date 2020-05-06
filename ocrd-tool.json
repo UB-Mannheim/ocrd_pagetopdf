@@ -54,15 +54,34 @@
             "type": "boolean",
             "default": false
         },
+        "overwrite": {
+            "description": "Remove all pre-existings files in the output file group.",
+            "type": "boolean",
+            "default": false
+        },
         "ext": {
           "description": "Output filename extension",
           "type": "string",
           "default": ".pdf"
         },
         "multipage": {
-            "description": "Merge all PDFs into one mulitpage file. Value is pdfname.",
+            "description": "Merge all PDFs into one mulitpage file. The value is used as filename for the pdf.",
             "type": "string",
             "default": ""
+        },
+        "pagelabel": {
+            "description": "Parameter for 'multipage': Set the page information, which will be used as pagelabel. Default is 'pageId', e.g. the option 'pagenumber' will create numbered pagelabel consecutively",
+            "type": "string",
+            "default": "pageId",
+            "enum": [
+            "pagenumber",
+            "pageId",
+            "basename",
+            "basename_without_extension",
+            "local_filename",
+            "ID",
+            "url"
+             ]
         },
         "script-args": {
           "description": "Extra arguments to PageToPdf (see https://github.com/PRImA-Research-Lab/prima-page-to-pdf)",
