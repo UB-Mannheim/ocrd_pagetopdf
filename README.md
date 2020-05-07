@@ -49,6 +49,6 @@ There is also an option to create an additional multipage file with name `merged
 
       ocrd-pagetopdf -I PAGE-FILGRP -O PDF-FILEGRP -p '{"textequiv_level" : "word", "font": "/usr/share/fonts/truetype/ubuntu/UbuntuMono-R.ttf"}'
 
-- If the multipage file pagelabelnames can be changed, e.g. consecutively pagenumber.
+- The multipage file pagelabelnames can be changed, e.g. consecutively pagenumber.
 
-    ocrd-pagetopdf -I PAGE-FILGRP -O PDF-FILEGRP -p '{"textequiv_level" : "word", "mulitpage":"merged", "pagelabelname":"pagenumber"}'
+      ocrd-pagetopdf -I PAGE-FILGRP -O PDF-FILEGRP -p '{"textequiv_level" : "word", "mulitpage":"merged", "pagelabelname":"pagenumber"}'
