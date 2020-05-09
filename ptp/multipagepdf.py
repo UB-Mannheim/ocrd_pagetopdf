@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 
-import os.path
 from pathlib import Path
 import sys
 import subprocess
