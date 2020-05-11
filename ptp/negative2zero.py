@@ -1,10 +1,7 @@
 from __future__ import absolute_import
 
-import os.path
-from pathlib import Path
 import sys
 
-from ocrd_modelfactory import page_from_file
 from ocrd_models.ocrd_page_generateds import parse
 from ocrd_models.ocrd_page import to_xml
 
