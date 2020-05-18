@@ -30,7 +30,7 @@ help:
 
 # Install system packages (on Debian/Ubuntu)
 deps-ubuntu:
-	apt-get install -y make python3 python3-pip python3-venv openjdk-8-jdk
+	apt-get install -y make python3 python3-pip python3-venv openjdk-8-jre-headless ghostscript
 
 # Install python packages
 deps:
