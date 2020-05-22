@@ -147,7 +147,10 @@ main () {
  
         info "found image file '$img_file'"
         if ! output=$(java -jar "$SHAREDIR/ptp/PageToPdf.jar" "${options[@]}" 2>&1); then
-            error "PdfToPdf failed for ID $in_id (pageId=$pageid): $output"
+            error "PageToPdf failed for ID $in_id (pageId=$pageid): $output"
+            continue
+        elif ! [ -f "$out_file" ]; then
+            error "PageToPdf result is empty for ID $in_id (pageId=$pageid): $output"
             continue
         fi
         
