@@ -16,16 +16,21 @@ help:
 	@echo ""
 	@echo "  Targets"
 	@echo ""
-	@echo "    deps       Install python packages"
-	@echo "    install    Install the executable in $(PREFIX)/bin and the ocrd-tool.json to $(SHAREDIR)"
-	@echo "    uninstall  Uninstall scripts and $(SHAREDIR)"
-	@echo "    docker     Build Docker image"
+	@echo "    deps-ubuntu	Install system packages (on Debian/Ubuntu)"
+	@echo "    deps       	Install python packages"
+	@echo "    install    	Install the executable in $(PREFIX)/bin and the ocrd-tool.json to $(SHAREDIR)"
+	@echo "    uninstall  	Uninstall scripts and $(SHAREDIR)"
+	@echo "    docker     	Build Docker image"
 	@echo ""
 	@echo "  Variables"
 	@echo ""
 	@echo "    PREFIX  Directory to install to ('$(PREFIX)')"
 
 # END-EVAL
+
+# Install system packages (on Debian/Ubuntu)
+deps-ubuntu:
+	apt-get install -y python3 python3-venv openjdk-8-jre-headless ghostscript
 
 # Install python packages
 deps:
