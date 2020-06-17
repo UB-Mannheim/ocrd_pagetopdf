@@ -11,20 +11,12 @@ SCRIPT_NAME="${0##*/}"
 
 MIMETYPE_PAGE=$(ocrd bashlib constants MIMETYPE_PAGE)
 
-# FIXME: add a bashlib wrapper for logging to use here
-function log {
-    echo >&2 "$(date +%T.%3N) $LEVEL $SCRIPT_NAME - $*"
-}
-function critical { LEVEL=CRITICAL log "$*"; }
-function error { LEVEL=ERROR log "$*"; }
-function warning { LEVEL=WARNING log "$*"; }
-function info { LEVEL=INFO log "$*"; }
-function debug { LEVEL=DEBUG log "$*"; }
-
 main () {
     # Load ocrd bashlib functions
     # shellcheck source=../core/ocrd/bashlib/lib.bash
     source $(ocrd bashlib filename)
+    
+    ocrd__minversion 2.10.4
 
     # Describe calling script to lib.bash
     ocrd__wrap "$SHAREDIR/ocrd-tool.json" "$SCRIPT_NAME" "$@"
@@ -37,29 +29,17 @@ main () {
     in_file_grp="${in_grps[0]}"
     img_file_grp="${in_grps[1]:-}"
     if [ -z "$img_file_grp" ]; then
-        warning "Without a second input file group for images, the original imageFilename will be used"
+        ocrd log warning "Without a second input file group for images, the original imageFilename will be used"
     fi
     out_file_grp=${ocrd__argv[output_file_grp]}
     
-    # Remove pre-existing files
-    if [ -d ${out_file_grp} ]; then
-        case ${params['overwrite']} in
-            [tT]rue|1)
-                warning "Removing all pre-existing files!"
-                ocrd workspace remove-group -rf "$out_file_grp" 
-                ;;
-            *)
-                :
-        esac
-    fi
-
     mkdir -p $out_file_grp
 
     # Parameters
     local negative2zero output_extension
     declare -a parameters=()
     if [ -z ${params['textequiv_level']:=} ]; then
-        warning "If you want to add a text layer, please set parameter 'textequiv_level' accordingly!"
+        ocrd log warning "If you want to add a text layer, please set parameter 'textequiv_level' accordingly!"
     else
         # first letter is sufficient (case does not matter)
         parameters+=(-text-source ${params['textequiv_level']:0:1})
@@ -103,13 +83,13 @@ main () {
         local pageid="${fields[2]:-}"
         declare -a options=(${parameters[*]})
 		
-        info "processing page '$pageid'"
+        ocrd log info "processing page '$pageid'"
         
         if ! test -f "$in_file"; then
-           error "input file \"$in_file\" ID=${in_id} (pageId=${pageid}) is not on disk"
+           ocrd log error "input file \"$in_file\" ID=${in_id} (pageId=${pageid}) is not on disk"
            continue
         fi
-        info "found PAGE file '$in_file'"
+        ocrd log info "found PAGE file '$in_file'"
         
         # Rework coords in PAGE
         if ((negative2zero)); then
@@ -131,7 +111,7 @@ main () {
         fi
 
         if ! test -f "$img_file"; then
-           error "No image file '$img_file' for $in_id (pageId=$pageid)"
+           ocrd log error "No image file '$img_file' for $in_id (pageId=$pageid)"
            continue
         fi
         options+=(-image "$img_file")
@@ -145,12 +125,12 @@ main () {
         options+=(-pdf "$out_file")
         
  
-        info "found image file '$img_file'"
+        ocrd log info "found image file '$img_file'"
         if ! output=$(java -jar "$SHAREDIR/ptp/PageToPdf.jar" "${options[@]}" 2>&1); then
-            error "PageToPdf failed for ID $in_id (pageId=$pageid): $output"
+            ocrd log error "PageToPdf failed for ID $in_id (pageId=$pageid): $output"
             continue
         elif ! [ -f "$out_file" ]; then
-            error "PageToPdf result is empty for ID $in_id (pageId=$pageid): $output"
+            ocrd log error "PageToPdf result is empty for ID $in_id (pageId=$pageid): $output"
             continue
         fi
         
@@ -164,11 +144,14 @@ main () {
         else
             options=()
         fi
+	if [[ "${ocrd__argv[overwrite]}" = true ]]; then
+            options+=( --force )
+        fi
         options+=( -G $out_file_grp
                    -m application/pdf
                    -i "$out_id"
                    "$out_file" )
-        info "adding output PDF file '$out_file'"
+        ocrd log info "adding output PDF file '$out_file'"
         ocrd workspace add "${options[@]}"
 
     done
