@@ -1,5 +1,5 @@
 {
-  "version": "0.0.1",
+  "version": "0.0.2",
   "git_url": "https://github.com/jkamlah/ocrd_pagetopdf",
   "tools": {
     "ocrd-pagetopdf": {
@@ -51,11 +51,6 @@
         },
         "negative2zero": {
             "description": "Set all negative box values to 0",
-            "type": "boolean",
-            "default": false
-        },
-        "overwrite": {
-            "description": "Remove all pre-existings files in the output file group.",
             "type": "boolean",
             "default": false
         },
