@@ -20,7 +20,8 @@ def get_metadata(mets):
             'Title': title,
             'Keywords': publisher.text+" (Publisher)" if publisher is not None else ""}
 
-def read_from_mets(metsfile, filegrp, outputfile, pagelabel='pageId'):
+def read_from_mets(metsfile, filegrp, outputfile, pagelabel='pageId', overwrite=False):
+    overwrite = overwrite == 'true'
     mets = OcrdMets(filename=metsfile)
     inputfiles = []
     pagelabels = []
@@ -33,7 +34,7 @@ def read_from_mets(metsfile, filegrp, outputfile, pagelabel='pageId'):
                 pagelabels.append(getattr(f, pagelabel,""))
     if inputfiles:
         if not pdfmerge(inputfiles, outputfile, pagelabels=pagelabels, metadata=metadata):
-            mets.add_file(filegrp, mimetype='application/pdf', ID=outputfile, url=str(Path(filegrp).joinpath(outputfile+'.pdf')))
+            mets.add_file(filegrp, mimetype='application/pdf', ID=outputfile, url=str(Path(filegrp).joinpath(outputfile+'.pdf')), force=overwrite)
             with atomic_write(metsfile, overwrite=True) as f:
                 f.write(mets.to_xml(xmllint=True).decode('utf-8'))
     return None
@@ -79,4 +80,4 @@ def pdfmerge(inputfiles, outputfile, pagelabels=None, metadata=None, store_tmp=F
         return 1
 
 if __name__=='__main__':
-    read_from_mets(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+    read_from_mets(*sys.argv[1:])

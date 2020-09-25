@@ -144,7 +144,7 @@ main () {
         else
             options=()
         fi
-	if [[ "${ocrd__argv[overwrite]}" = true ]]; then
+        if [[ "${ocrd__argv[overwrite]}" = true ]]; then
             options+=( --force )
         fi
         options+=( -G $out_file_grp
@@ -157,7 +157,7 @@ main () {
     done
     
     if [ ${params['multipage']:=} ]; then
-        python3 "$SHAREDIR/ptp/multipagepdf.py" "$mets" "$out_file_grp" "${params['multipage']}" "${params['pagelabel']}" 
+        python3 "$SHAREDIR/ptp/multipagepdf.py" "$mets" "$out_file_grp" "${params['multipage']}" "${params['pagelabel']}" "${params['overwrite']}"
     fi
 }
 
