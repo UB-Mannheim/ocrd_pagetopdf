@@ -27,7 +27,7 @@ def read_from_mets(metsfile, filegrp, outputfile, pagelabel='pageId', overwrite=
     pagelabels = []
     metadata = get_metadata(mets)
     for f in mets.find_files(mimetype='application/pdf', fileGrp=filegrp):
-        # ingore mulitpaged pdfs
+        # ignore multipaged pdfs
         if f.pageId:
             inputfiles.append(f.local_filename)
             if pagelabel != "pagenumber":
