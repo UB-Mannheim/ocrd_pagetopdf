@@ -63,21 +63,28 @@ def pdfmerge(inputfiles, outputfile, pagelabels=None, metadata=None, store_tmp=F
     if isinstance(inputfiles, str):
         inputfiles = inputfiles.split(",")
     log.info("Merging PDFs..")
+    pdfmarks = None
     try:
         pdfdir = Path(inputfiles[0]).parent
         pdfmarks = create_pdfmarks(pdfdir, pagelabels, metadata)
-        p = subprocess.Popen(f"gs -sDEVICE=pdfwrite \
-                -dNOPAUSE -dBATCH -dSAFER \
-                -sOutputFile={pdfdir.joinpath(outputfile+'.pdf')} \
-                {' '.join(inputfiles)}\
-                {pdfmarks}", shell=True, stderr=subprocess.STDOUT)
-        p.communicate()
-        if not store_tmp:
-            pdfmarks.unlink()
-        return 0
+        stdout = subprocess.check_output(
+            f"gs -sDEVICE=pdfwrite \
+            -dNOPAUSE -dBATCH -dSAFER \
+            -sOutputFile={pdfdir.joinpath(outputfile+'.pdf')} \
+            {' '.join(inputfiles)}\
+            {pdfmarks}", shell=True,
+            stderr=subprocess.STDOUT,
+            # give us str instead of bytes:
+            universal_newlines=True)
+        for line in stdout.split('\n'):
+            log.debug(line)
+        return True
     except Exception:
         log.exception(f"Couldn't merge the pdf files.")
-        return 1
+        return False
+    finally:
+        if pdfmarks and not store_tmp:
+            pdfmarks.unlink()
 
 if __name__=='__main__':
     initLogging()
