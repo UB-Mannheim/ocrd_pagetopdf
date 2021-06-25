@@ -158,7 +158,7 @@ main () {
     done
     
     if [ ${params['multipage']:=} ]; then
-        python3 "$SHAREDIR/ptp/multipagepdf.py" "$mets" "$out_file_grp" "${params['multipage']}" "${params['pagelabel']}" "${ocrd__argv['overwrite']}"
+        python3 "$SHAREDIR/ptp/multipagepdf.py" "$mets" "$out_file_grp" "$page_id" "${params['multipage']}" "${params['pagelabel']}" "${ocrd__argv['overwrite']}"
     fi
 }
 
