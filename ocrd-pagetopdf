@@ -130,7 +130,7 @@ main () {
         if ! output=$(java -jar "$SHAREDIR/ptp/PageToPdf.jar" "${options[@]}" 2>&1); then
             ocrd log error "PageToPdf failed for ID $in_id (pageId=$pageid): $output"
             continue
-        elif ! [ -f "$out_file" ]; then
+        elif ! [ -f "$out_file" -a -s "$out_file" ]; then
             ocrd log error "PageToPdf result is empty for ID $in_id (pageId=$pageid): $output"
             continue
         fi
