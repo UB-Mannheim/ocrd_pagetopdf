@@ -103,6 +103,7 @@ main () {
         if [ -n "$img_file_grp" ]; then
             img_file=$(ocrd workspace find \
                             -g $pageid -G $img_file_grp \
+                            -m //image/.* \
                             -k local_filename --download)
         else
             # we could use xsltproc or xmlstarlet for this
