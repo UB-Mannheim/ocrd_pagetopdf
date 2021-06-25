@@ -5,7 +5,7 @@ import sys
 import subprocess
 
 from ocrd_models import OcrdMets
-from ocrd_utils.logging import getLogger
+from ocrd_utils.logging import getLogger, initLogging
 from atomicwrites import atomic_write
 from ocrd_models.constants import NAMESPACES as NS
 
@@ -80,4 +80,5 @@ def pdfmerge(inputfiles, outputfile, pagelabels=None, metadata=None, store_tmp=F
         return 1
 
 if __name__=='__main__':
+    initLogging()
     read_from_mets(*sys.argv[1:])
