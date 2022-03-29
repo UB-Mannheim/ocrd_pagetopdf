@@ -5,7 +5,7 @@ import sys
 import subprocess
 
 from ocrd_models import OcrdMets
-from ocrd_utils.logging import getLogger
+from ocrd_utils.logging import getLogger, initLogging
 from atomicwrites import atomic_write
 from ocrd_models.constants import NAMESPACES as NS
 
@@ -20,24 +20,28 @@ def get_metadata(mets):
             'Title': title,
             'Keywords': publisher.text+" (Publisher)" if publisher is not None else ""}
 
-def read_from_mets(metsfile, filegrp, outputfile, pagelabel='pageId', overwrite=False):
+def read_from_mets(metsfile, filegrp, page_ids, outputfile, pagelabel='pageId', overwrite=False):
     overwrite = overwrite == 'true'
     mets = OcrdMets(filename=metsfile)
     inputfiles = []
     pagelabels = []
     metadata = get_metadata(mets)
-    for f in mets.find_files(mimetype='application/pdf', fileGrp=filegrp):
+    for f in mets.find_files(mimetype='application/pdf', fileGrp=filegrp, pageId=(page_ids or None)):
         # ignore multipaged pdfs
         if f.pageId:
             inputfiles.append(f.local_filename)
             if pagelabel != "pagenumber":
                 pagelabels.append(getattr(f, pagelabel,""))
-    if inputfiles:
-        if not pdfmerge(inputfiles, outputfile, pagelabels=pagelabels, metadata=metadata):
-            mets.add_file(filegrp, mimetype='application/pdf', ID=outputfile, url=str(Path(filegrp).joinpath(outputfile+'.pdf')), force=overwrite)
-            with atomic_write(metsfile, overwrite=True) as f:
-                f.write(mets.to_xml(xmllint=True).decode('utf-8'))
-    return None
+    log = getLogger('processor.pagetopdf')
+    if not inputfiles:
+        log.warning("No PDF input files for merging %s", outputfile)
+        return None
+    if pdfmerge(inputfiles, outputfile, pagelabels=pagelabels, metadata=metadata):
+        mets.add_file(filegrp, mimetype='application/pdf', ID=outputfile,
+                      url=str(Path(filegrp).joinpath(outputfile+'.pdf')),
+                      force=overwrite)
+        with atomic_write(metsfile, overwrite=True) as f:
+            f.write(mets.to_xml(xmllint=True).decode('utf-8'))
 
 def create_pdfmarks(pdfdir, pagelabels=None, metadata=None):
     pdfmarks = pdfdir.joinpath('pdfmarks.ps')
@@ -63,21 +67,29 @@ def pdfmerge(inputfiles, outputfile, pagelabels=None, metadata=None, store_tmp=F
     if isinstance(inputfiles, str):
         inputfiles = inputfiles.split(",")
     log.info("Merging PDFs..")
+    pdfmarks = None
     try:
         pdfdir = Path(inputfiles[0]).parent
         pdfmarks = create_pdfmarks(pdfdir, pagelabels, metadata)
-        p = subprocess.Popen(f"gs -sDEVICE=pdfwrite \
-                -dNOPAUSE -dBATCH -dSAFER \
-                -sOutputFile={pdfdir.joinpath(outputfile+'.pdf')} \
-                {' '.join(inputfiles)}\
-                {pdfmarks}", shell=True, stderr=subprocess.STDOUT)
-        p.communicate()
-        if not store_tmp:
-            pdfmarks.unlink()
-        return 0
+        stdout = subprocess.check_output(
+            f"gs -sDEVICE=pdfwrite \
+            -dNOPAUSE -dBATCH -dSAFER \
+            -sOutputFile={pdfdir.joinpath(outputfile+'.pdf')} \
+            {' '.join(inputfiles)}\
+            {pdfmarks}", shell=True,
+            stderr=subprocess.STDOUT,
+            # give us str instead of bytes:
+            universal_newlines=True)
+        for line in stdout.split('\n'):
+            log.debug(line)
+        return True
     except Exception:
         log.exception(f"Couldn't merge the pdf files.")
-        return 1
+        return False
+    finally:
+        if pdfmarks and not store_tmp:
+            pdfmarks.unlink()
 
 if __name__=='__main__':
+    initLogging()
     read_from_mets(*sys.argv[1:])

@@ -103,6 +103,7 @@ main () {
         if [ -n "$img_file_grp" ]; then
             img_file=$(ocrd workspace find \
                             -g $pageid -G $img_file_grp \
+                            -m '//image/.*' \
                             -k local_filename --download)
         else
             # we could use xsltproc or xmlstarlet for this
@@ -129,7 +130,7 @@ main () {
         if ! output=$(java -jar "$SHAREDIR/ptp/PageToPdf.jar" "${options[@]}" 2>&1); then
             ocrd log error "PageToPdf failed for ID $in_id (pageId=$pageid): $output"
             continue
-        elif ! [ -f "$out_file" ]; then
+        elif ! [ -f "$out_file" -a -s "$out_file" ]; then
             ocrd log error "PageToPdf result is empty for ID $in_id (pageId=$pageid): $output"
             continue
         fi
@@ -157,7 +158,7 @@ main () {
     done
     
     if [ ${params['multipage']:=} ]; then
-        python3 "$SHAREDIR/ptp/multipagepdf.py" "$mets" "$out_file_grp" "${params['multipage']}" "${params['pagelabel']}" "${ocrd__argv['overwrite']}"
+        python3 "$SHAREDIR/ptp/multipagepdf.py" "$mets" "$out_file_grp" "$page_id" "${params['multipage']}" "${params['pagelabel']}" "${ocrd__argv['overwrite']}"
     fi
 }
 
