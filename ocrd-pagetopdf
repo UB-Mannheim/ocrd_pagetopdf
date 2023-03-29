@@ -97,6 +97,15 @@ main () {
         mkdir -p $out_file_grp
         ocrd log info "found ${in_mimetype} file '${in_file}'"
         
+        if [ -n "$img_file_grp" ]; then
+            # multiple fileGrps: ocrd__input_file() is n-ary
+            img_file="${in_file[1]}"
+            img_mime="${in_mimetype[1]}"
+        else
+            img_file="${in_file}"
+            img_mime="${in_mimetype}"
+        fi
+
         # Rework coords in PAGE
         if ((negative2zero)); then
             local tmpfile
@@ -106,15 +115,11 @@ main () {
         fi
 	    options+=(-xml "$in_file")
 
-        if [ -n "$img_file_grp" ]; then
-            # multiple fileGrps: ocrd__input_file() is n-ary
-            img_file="${in_file[1]}"
-        else
-            img_file="${in_file}"
+        if [ "$img_mime" = "$MIMETYPE_PAGE" ]; then
+            # we could use xsltproc or xmlstarlet for this
+            # (but that would add another dependency)
+            img_file=$(python3 "$SHAREDIR/ptp/extract-imagefilename.py" "$img_file")
         fi
-        # we could use xsltproc or xmlstarlet for this
-        # (but that would add another dependency)
-        img_file=$(python3 "$SHAREDIR/ptp/extract-imagefilename.py" "$in_file")
 
         if ! test -f "$img_file"; then
            ocrd log error "No image file '$img_file' for $in_id (pageId=$in_pageId)"
@@ -130,7 +135,6 @@ main () {
         local out_file="$out_file_grp/${out_id}$output_extension"
         options+=(-pdf "$out_file")
         
- 
         ocrd log info "found image file '$img_file'"
         if ! output=$(java -jar "$SHAREDIR/ptp/PageToPdf.jar" "${options[@]}" 2>&1); then
             ocrd log error "PageToPdf failed for ID $in_id (pageId=$in_pageId): $output"
