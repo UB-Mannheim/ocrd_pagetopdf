@@ -6,7 +6,7 @@ import subprocess
 
 from ocrd_models import OcrdMets
 from ocrd_utils.logging import getLogger, initLogging
-from atomicwrites import atomic_write
+from ocrd_utils import atomic_write
 from ocrd_models.constants import NAMESPACES as NS
 
 def get_metadata(mets):
@@ -40,7 +40,7 @@ def read_from_mets(metsfile, filegrp, page_ids, outputfile, pagelabel='pageId', 
         mets.add_file(filegrp, mimetype='application/pdf', ID=outputfile,
                       url=str(Path(filegrp).joinpath(outputfile+'.pdf')),
                       force=overwrite)
-        with atomic_write(metsfile, overwrite=True) as f:
+        with atomic_write(metsfile) as f:
             f.write(mets.to_xml(xmllint=True).decode('utf-8'))
 
 def create_pdfmarks(pdfdir, pagelabels=None, metadata=None):

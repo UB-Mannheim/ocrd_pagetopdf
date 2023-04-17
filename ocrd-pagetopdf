@@ -11,29 +11,24 @@ SCRIPT_NAME="${0##*/}"
 
 MIMETYPE_PAGE=$(ocrd bashlib constants MIMETYPE_PAGE)
 
+FIFO=$(mktemp -u)
+function backout {
+    kill $(jobs -p)
+    wait &>/dev/null
+    exec 3>&-
+    rm -f $FIFO
+    exit 1
+}
+
 main () {
     # Load ocrd bashlib functions
     # shellcheck source=../core/ocrd/bashlib/lib.bash
     source $(ocrd bashlib filename)
     
-    ocrd__minversion 2.10.4
+    ocrd__minversion 2.50.0
 
     # Describe calling script to lib.bash
     ocrd__wrap "$SHAREDIR/ocrd-tool.json" "$SCRIPT_NAME" "$@"
-
-    cd "${ocrd__argv[working_dir]}"
-    local page_id in_file_grp img_file_grp out_file_grp
-    page_id=${ocrd__argv[page_id]:-}
-    mets="${ocrd__argv[mets_file]}"
-    IFS=',' read -ra in_grps <<< "${ocrd__argv[input_file_grp]}"
-    in_file_grp="${in_grps[0]}"
-    img_file_grp="${in_grps[1]:-}"
-    if [ -z "$img_file_grp" ]; then
-        ocrd log warning "Without a second input file group for images, the original imageFilename will be used"
-    fi
-    out_file_grp=${ocrd__argv[output_file_grp]}
-    
-    mkdir -p $out_file_grp
 
     # Parameters
     local negative2zero output_extension
@@ -60,37 +55,57 @@ main () {
     parameters+=(${params['script-args']})
     output_extension=${params['ext']}
 
+    cd "${ocrd__argv[working_dir]}"
+    local page_id in_file_grp img_file_grp out_file_grp
+    page_id=${ocrd__argv[page_id]:-}
+    mets="$(basename ${ocrd__argv[mets_file]})"
+    IFS=',' read -ra in_grps <<< "${ocrd__argv[input_file_grp]}"
+    in_file_grp="${in_grps[0]}"
+    img_file_grp="${in_grps[1]:-}"
+    if [ -z "$img_file_grp" ]; then
+        ocrd log warning "Without a second input file group for images, the original imageFilename will be used"
+    fi
+    out_file_grp=${ocrd__argv[output_file_grp]}
+    
+    mkfifo $FIFO
+    trap backout ERR
+    
+    bulk_options=( -r '(?P<grp>[^ ]+) (?P<page>[^ ]+) (?P<file>[^ ]+) (?P<url>.*)')
+    bulk_options+=( -G '{{ grp }}' -m application/pdf -g '{{ page }}' -i '{{ file }}' -S '{{ url }}')
+    if [[ "${ocrd__argv[overwrite]}" == true ]];then
+        bulk_options+=( --force )
+    fi
+    ocrd workspace -m "${mets}" bulk-add "${bulk_options[@]}" - <$FIFO &
+    exec 3>$FIFO
+    
     # Download the files and do the conversion
-    local IFS=$'\n'
-    files=($(ocrd workspace find \
-        ${page_id:+-g} ${page_id:-} \
-        -G $in_file_grp \
-        -k local_filename \
-        -k ID \
-        -k pageId \
-        --download))
-    local IFS=$' \t\n'
-    local n=0 zeros=0000
-    for csv in "${files[@]}"; do
-        let n+=1
-        # Parse comma separated fields
-        local IFS=$'\t'
-        local fields=($csv)
-        local IFS=$' \t\n'
-
-        local in_file="${fields[0]}"
-        local in_id="${fields[1]}"
-        local pageid="${fields[2]:-}"
-        declare -a options=(${parameters[*]})
-		
-        ocrd log info "processing page '$pageid'"
+    for ((n=0; n<${#ocrd__files[*]}; n++)); do
+        local in_file=($(ocrd__input_file $n url))
+        local in_id=($(ocrd__input_file $n ID))
+        local in_mimetype=($(ocrd__input_file $n mimetype))
+        local in_pageId=($(ocrd__input_file $n pageId))
+        local out_id="$(ocrd__input_file $n outputFileId)"
+        local out_file="$out_file_grp/${out_id}.xml"
         
-        if ! test -f "$in_file"; then
-           ocrd log error "input file \"$in_file\" ID=${in_id} (pageId=${pageid}) is not on disk"
+        declare -a options=(${parameters[*]})
+        ocrd log info "processing page '${in_pageId}'"
+        
+        if ! test -f "${in_file#file://}"; then
+           ocrd log error "input file \"${in_file#file://}\" (ID=${in_id} pageId=${in_pageId} MIME=${in_mimetype}) is not on disk"
            continue
         fi
-        ocrd log info "found PAGE file '$in_file'"
+        mkdir -p $out_file_grp
+        ocrd log info "found ${in_mimetype} file '${in_file}'"
         
+        if [ -n "$img_file_grp" ]; then
+            # multiple fileGrps: ocrd__input_file() is n-ary
+            img_file="${in_file[1]}"
+            img_mime="${in_mimetype[1]}"
+        else
+            img_file="${in_file}"
+            img_mime="${in_mimetype}"
+        fi
+
         # Rework coords in PAGE
         if ((negative2zero)); then
             local tmpfile
@@ -100,19 +115,14 @@ main () {
         fi
 	    options+=(-xml "$in_file")
 
-        if [ -n "$img_file_grp" ]; then
-            img_file=$(ocrd workspace find \
-                            -g $pageid -G $img_file_grp \
-                            -m '//image/.*' \
-                            -k local_filename --download)
-        else
+        if [ "$img_mime" = "$MIMETYPE_PAGE" ]; then
             # we could use xsltproc or xmlstarlet for this
             # (but that would add another dependency)
-            img_file=$(python3 "$SHAREDIR/ptp/extract-imagefilename.py" "$in_file")
+            img_file=$(python3 "$SHAREDIR/ptp/extract-imagefilename.py" "$img_file")
         fi
 
         if ! test -f "$img_file"; then
-           ocrd log error "No image file '$img_file' for $in_id (pageId=$pageid)"
+           ocrd log error "No image file '$img_file' for $in_id (pageId=$in_pageId)"
            continue
         fi
         options+=(-image "$img_file")
@@ -125,13 +135,12 @@ main () {
         local out_file="$out_file_grp/${out_id}$output_extension"
         options+=(-pdf "$out_file")
         
- 
         ocrd log info "found image file '$img_file'"
         if ! output=$(java -jar "$SHAREDIR/ptp/PageToPdf.jar" "${options[@]}" 2>&1); then
-            ocrd log error "PageToPdf failed for ID $in_id (pageId=$pageid): $output"
+            ocrd log error "PageToPdf failed for ID $in_id (pageId=$in_pageId): $output"
             continue
         elif ! [ -f "$out_file" -a -s "$out_file" ]; then
-            ocrd log error "PageToPdf result is empty for ID $in_id (pageId=$pageid): $output"
+            ocrd log error "PageToPdf result is empty for ID $in_id (pageId=$in_pageId): $output"
             continue
         fi
         
@@ -139,23 +148,26 @@ main () {
             rm $tmpfile
         fi
 
-        # Add the output file to METS
-        if [ -n "$pageid" ]; then
-            options=( -g $pageid )
-        else
-            options=()
-        fi
-        if [[ "${ocrd__argv[overwrite]}" = true ]]; then
-            options+=( --force )
-        fi
-        options+=( -G $out_file_grp
-                   -m application/pdf
-                   -i "$out_id"
-                   "$out_file" )
         ocrd log info "adding output PDF file '$out_file'"
-        ocrd workspace add "${options[@]}"
-
+        # Add the output file to METS
+        # if [ -n "$in_pageId" ]; then
+        #     options=( -g $in_pageId )
+        # else
+        #     options=()
+        # fi
+        # if [[ "${ocrd__argv[overwrite]}" = true ]]; then
+        #     options+=( --force )
+        # fi
+        # options+=( -G $out_file_grp
+        #            -m application/pdf
+        #            -i "$out_id"
+        #            "$out_file" )
+        # ocrd workspace add "${options[@]}"
+        echo "${out_file_grp}" "${in_pageId}" "${out_id}" "${out_file}" >&3
     done
+    exec 3>&-
+    rm -f $FIFO
+    wait
     
     if [ ${params['multipage']:=} ]; then
         python3 "$SHAREDIR/ptp/multipagepdf.py" "$mets" "$out_file_grp" "$page_id" "${params['multipage']}" "${params['pagelabel']}" "${ocrd__argv['overwrite']}"
