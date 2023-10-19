@@ -75,7 +75,12 @@ main () {
     if [[ "${ocrd__argv[overwrite]}" == true ]];then
         bulk_options+=( --force )
     fi
-    ocrd workspace -m "${mets}" bulk-add "${bulk_options[@]}" - <$FIFO &
+    declare -a workspace_options
+    workspace_options=( -m "${mets}" )
+    if [[ -n "${ocrd__argv[mets_server_url]}" ]];then
+        workspace_options+=( -U "${ocrd__argv[mets_server_url]}" )
+    fi
+    ocrd workspace "${workspace_options[@]}" bulk-add "${bulk_options[@]}" - <$FIFO &
     exec 3>$FIFO
     
     # Download the files and do the conversion
