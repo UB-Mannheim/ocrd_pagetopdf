@@ -25,7 +25,7 @@ main () {
     # shellcheck source=../core/ocrd/bashlib/lib.bash
     source $(ocrd bashlib filename)
     
-    ocrd__minversion 2.50.0
+    ocrd__minversion 2.58.1
 
     # Describe calling script to lib.bash
     ocrd__wrap "$SHAREDIR/ocrd-tool.json" "$SCRIPT_NAME" "$@"
@@ -75,12 +75,18 @@ main () {
     if [[ "${ocrd__argv[overwrite]}" == true ]];then
         bulk_options+=( --force )
     fi
-    ocrd workspace -m "${mets}" bulk-add "${bulk_options[@]}" - <$FIFO &
+    declare -a workspace_options
+    workspace_options=( -m "${mets}" )
+    if [[ -n "${ocrd__argv[mets_server_url]}" ]];then
+        workspace_options+=( -U "${ocrd__argv[mets_server_url]}" )
+    fi
+    ocrd workspace "${workspace_options[@]}" bulk-add "${bulk_options[@]}" - <$FIFO &
     exec 3>$FIFO
     
+    local zeros=0000
     # Download the files and do the conversion
     for ((n=0; n<${#ocrd__files[*]}; n++)); do
-        local in_file=($(ocrd__input_file $n url))
+        local in_file=($(ocrd__input_file $n local_filename))
         local in_id=($(ocrd__input_file $n ID))
         local in_mimetype=($(ocrd__input_file $n mimetype))
         local in_pageId=($(ocrd__input_file $n pageId))
