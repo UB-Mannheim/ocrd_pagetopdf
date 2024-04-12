@@ -60,7 +60,7 @@
           "default": ".pdf"
         },
         "multipage": {
-            "description": "Merge all PDFs into one mulitpage file. The value is used as filename for the pdf.",
+            "description": "Merge all PDFs into one multipage file. The value is used as filename for the pdf.",
             "type": "string",
             "default": ""
         },

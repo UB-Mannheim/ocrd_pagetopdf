@@ -32,7 +32,7 @@ This will run the script and create PDF files for each page with a text layer ba
 
 There is also an option to create an additional multipage file with name `merged.pdf`, which contain all single pages in correct order:
 
-    ocrd-pagetopdf -I PAGE-FILGRP -O PDF-FILEGRP -p '{"textequiv_level" : "word", "mulitpage":"merged"}'
+    ocrd-pagetopdf -I PAGE-FILGRP -O PDF-FILEGRP -p '{"textequiv_level" : "word", "multipage":"merged"}'
 
 ### FAQ
 
@@ -51,4 +51,4 @@ There is also an option to create an additional multipage file with name `merged
 
 - The multipage file pagelabelnames can be changed, e.g. consecutively pagenumber.
 
-      ocrd-pagetopdf -I PAGE-FILGRP -O PDF-FILEGRP -p '{"textequiv_level" : "word", "mulitpage":"merged", "pagelabelname":"pagenumber"}'
+      ocrd-pagetopdf -I PAGE-FILGRP -O PDF-FILEGRP -p '{"textequiv_level" : "word", "multipage":"merged", "pagelabelname":"pagenumber"}'
